@@ -1,24 +1,35 @@
 local lsp = require("lsp-zero")
+local lspconfig = require('lspconfig')
 
 lsp.preset("recommended")
 
+lspconfig.tsserver.setup({})
+
 lsp.ensure_installed({
     'tsserver',
-    'eslint',
     'rust_analyzer',
 })
 
-lsp.configure('lua_ls', {
-    settings = {
-        Lua = {
-            diagnostics = {
-                global = { 'vim' }
-            }
-        }
-    }
-})
+lspconfig.lua_ls.setup {
+   settings = {
+     Lua = {
+       runtime = {
+         version = 'LuaJIT',
+       },
+       diagnostics = {
+         globals = {'vim'},
+       },
+       workspace = {
+         library = vim.api.nvim_get_runtime_file("", true),
+       },
+       telemetry = {
+         enable = false,
+       },
+     },
+   },
+ }
 
-lsp.on_attach(function(client, bufnr)
+lsp.on_attach(function(_, bufnr)
     local opts = {buffer = bufnr, remap = false}
 
     vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, opts)
