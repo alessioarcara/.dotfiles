@@ -6,16 +6,17 @@ vim.cmd.packadd('packer.nvim')
 return require('packer').startup(function(use)
     -- Packer can manage itself
     use 'wbthomason/packer.nvim'
-
+    -- fuzzy finder
     use {
         'nvim-telescope/telescope.nvim', tag = '0.1.0',
         -- or                            , branch = '0.1.x',
         requires = { {'nvim-lua/plenary.nvim'} }
     }
-
+    -- theme 
     use 'folke/tokyonight.nvim'
-
+    -- efficient parser for syntax tree
     use("nvim-treesitter/nvim-treesitter", {run = ":TSUpdate"})
+    -- lsp
     use {
         'VonHeikemen/lsp-zero.nvim',
         branch = 'v1.x',
@@ -46,6 +47,12 @@ return require('packer').startup(function(use)
     use("christoomey/vim-tmux-navigator") -- tmux & split window navigation
     use("tpope/vim-fugitive")
     use("ThePrimeagen/vim-be-good")
+    -- tabs
     use('nvim-tree/nvim-web-devicons')
     use {'romgrk/barbar.nvim', requires = 'nvim-web-devicons'}
+    -- latex
+    use 'lervag/vimtex'
+    -- quarto
+    use 'quarto-dev/quarto-nvim'
+    use 'jmbuhr/otter.nvim'
 end)
