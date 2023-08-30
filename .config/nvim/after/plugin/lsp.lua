@@ -1,9 +1,4 @@
-local lsp = require("lsp-zero")
-local lspconfig = require('lspconfig')
-
-lsp.preset("recommended")
-
-lspconfig.tsserver.setup({})
+local lsp = require("lsp-zero").preset("recommended")
 
 lsp.ensure_installed({
     'rust_analyzer',
@@ -12,8 +7,6 @@ lsp.ensure_installed({
 })
 
 lsp.skip_server_setup({'rust_analyzer'})
-
-lsp.nvim_workspace()
 
 lsp.on_attach(function(_, bufnr)
     local opts = {buffer = bufnr, remap = false}
@@ -30,8 +23,38 @@ lsp.on_attach(function(_, bufnr)
     vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, opts)
 end)
 
+require('lspconfig').lua_ls.setup(lsp.nvim_lua_ls())
+
 lsp.setup()
 
+lsp.set_sign_icons({
+  error = '✘',
+  warn = '▲',
+  hint = '⚑',
+  info = '»'
+})
+
+local cmp = require("cmp")
+
 vim.diagnostic.config({
-    virtual_text = true
+    virtual_text = false,
+})
+
+require('luasnip.loaders.from_vscode').lazy_load()
+
+cmp.setup({
+    preselect = 'item',
+    completion = {
+        completeopt = 'menu,menuone,noinsert'
+    },
+    sources = {
+        {name = 'path'},
+        {name = 'nvim_lsp'},
+        {name = 'nvim_lua'},
+        {name = 'buffer', keyword_length = 3},
+        {name = 'luasnip', keyword_length = 2},
+    },
+    mapping = {
+        ['<CR>'] = cmp.mapping.confirm({select = false})
+    }
 })
