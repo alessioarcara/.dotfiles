@@ -6,28 +6,14 @@ lsp.preset("recommended")
 lspconfig.tsserver.setup({})
 
 lsp.ensure_installed({
-    'tsserver',
     'rust_analyzer',
+    'tsserver',
+    'eslint'
 })
 
-lspconfig.lua_ls.setup {
-    settings = {
-        Lua = {
-            runtime = {
-                version = 'LuaJIT',
-            },
-            diagnostics = {
-                globals = {'vim'},
-            },
-            workspace = {
-                library = vim.api.nvim_get_runtime_file("", true),
-            },
-            telemetry = {
-                enable = false,
-            },
-        },
-    },
-}
+lsp.skip_server_setup({'rust_analyzer'})
+
+lsp.nvim_workspace()
 
 lsp.on_attach(function(_, bufnr)
     local opts = {buffer = bufnr, remap = false}

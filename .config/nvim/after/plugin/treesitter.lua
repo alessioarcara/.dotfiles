@@ -1,6 +1,6 @@
 require'nvim-treesitter.configs'.setup {
     -- A list of parser names, or "all"
-    ensure_installed = { 'c', 'lua', 'python', 'rust', 'tsx', 'typescript', 'help', 'vim' },
+    ensure_installed = { 'c', 'lua', 'python', 'rust', 'tsx', 'typescript', 'vim', 'vimdoc' },
 
     sync_install = false,
     -- Automatically install missing parsers when entering buffer
