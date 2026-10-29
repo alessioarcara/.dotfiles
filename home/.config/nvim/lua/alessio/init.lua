@@ -1,4 +1,4 @@
-require("alessio.lazy")
-require("alessio.remap")
 require("alessio.options")
+require("alessio.remap")
 require("alessio.autocmds")
+require("alessio.lazy")
