@@ -3,6 +3,8 @@
 zsh (oh-my-zsh + powerlevel10k), tmux, Neovim, alacritty and lazygit
 configs, plus a tmux setup for coding agents (Claude Code, Codex).
 
+![tmux: Neovim and a shell in window 1, three agents in their worktrees with state badges, plan usage in the status bar](docs/screenshot.png)
+
 ## Install
 
 ```bash
