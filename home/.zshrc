@@ -27,8 +27,14 @@ export VISUAL=nvim
 
 alias vim='nvim'
 
+# fzf: Ctrl-R history, Ctrl-T files, Alt-C cd
+command -v fzf >/dev/null && source <(fzf --zsh)
+
 # Machine-specific settings (CUDA, work aliases, ...) live outside the repo
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# zoxide: `z <part of path>` jumps to frequent dirs, `zi` picks with fzf (keep last)
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
