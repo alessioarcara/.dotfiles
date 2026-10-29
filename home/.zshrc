@@ -26,9 +26,16 @@ export EDITOR=nvim
 export VISUAL=nvim
 
 alias vim='nvim'
+# syntax colors only, no line numbers or pager; piped output stays plain cat
+alias cat='bat --style=plain --paging=never'
 
-# fzf: Ctrl-R history, Ctrl-T files, Alt-C cd
+# fzf: Ctrl-T files (with a bat preview), Alt-C cd
+export FZF_CTRL_T_OPTS="--preview 'bat --color=always --style=numbers --line-range=:200 {}'"
 command -v fzf >/dev/null && source <(fzf --zsh)
+
+# atuin: Ctrl-R searches the shell history (after fzf, so it takes Ctrl-R);
+# the up arrow keeps the plain zsh history
+command -v atuin >/dev/null && eval "$(atuin init zsh --disable-up-arrow)"
 
 # Machine-specific settings (CUDA, work aliases, ...) live outside the repo
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
