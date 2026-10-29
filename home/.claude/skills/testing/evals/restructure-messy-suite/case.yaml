@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: restructure-messy-suite
+expected_outcome: |
+  The suite is split into a fast unit layer and an integration layer by directory, every test checks one behaviour with arrange/act/assert, error tests assert the message, the sleep and the unseeded randomness are gone, every original behaviour is still covered, the suite passes and the README says how to run each layer.
+context:
+  scaffold_script: place-files.sh

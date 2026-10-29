@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: test-behaviour-not-internals
+expected_outcome: |
+  The tests are rewritten against the public interface only: add/remaining/is_over, with the errors checked by message. No test names _validate, _spent, _check or _history, and no patch.object. Each original behaviour (negative rejected, adds reduce remaining, over-budget rejected, is_over) is still covered. The suite passes.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: fix-flaky-suite
+expected_outcome: |
+  Both tests become deterministic: the job test waits on the job's own wait() (or a callback) instead of sleeping, with the timeout in a named constant; the prices test uses fixed inputs or a seeded generator with exact Decimal arithmetic. No test is deleted, skipped or marked xfail, and the suite passes many runs in a row.
+context:
+  scaffold_script: place-files.sh
