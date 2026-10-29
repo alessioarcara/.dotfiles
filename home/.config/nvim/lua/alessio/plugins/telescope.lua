@@ -8,13 +8,16 @@ return {
   cmd = "Telescope",
   keys = {
     { "<leader>pf", function() require("telescope.builtin").find_files() end },
-    { "<C-p>", function() require("telescope.builtin").git_files() end },
+    -- git_files errors outside a repo, fall back to find_files
     {
-      "<leader>ps",
+      "<C-p>",
       function()
-        require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") })
+        if not pcall(require("telescope.builtin").git_files) then
+          require("telescope.builtin").find_files()
+        end
       end,
     },
+    { "<leader>ps", function() require("telescope.builtin").live_grep() end },
   },
   config = function()
     require("telescope").setup({})
