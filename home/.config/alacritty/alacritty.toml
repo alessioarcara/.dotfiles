@@ -1,0 +1,9 @@
+[general]
+import = ["~/.config/alacritty/themes/alacritty_0_12.toml"]
+
+[window]
+opacity = 0.93
+
+[font]
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+size = 11
