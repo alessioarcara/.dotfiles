@@ -1,6 +1,0 @@
-schema_version: "1.1"
-name: add-tests-to-new-function
-expected_outcome: |
-  Unit tests for split_batches in tests/unit/ledger/test_batches.py, one behaviour each: an even split, an uneven last batch, an empty input, and the size error with its message. No integration or e2e test is added for a pure function. The suite passes.
-context:
-  scaffold_script: place-files.sh

@@ -1,6 +1,0 @@
-schema_version: "1.1"
-name: replace-mocks-with-sociable-tests
-expected_outcome: |
-  The mock-based tests are replaced by tests of the observable output: a real Store on tmp_path (then under tests/integration) or a small hand-written fake (then under tests/unit); they assert the summary text, not which store methods were called. unittest.mock disappears from the suite. The suite passes.
-context:
-  scaffold_script: place-files.sh

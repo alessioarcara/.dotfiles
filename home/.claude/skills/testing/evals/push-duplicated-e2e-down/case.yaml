@@ -1,6 +1,0 @@
-schema_version: "1.1"
-name: push-duplicated-e2e-down
-expected_outcome: |
-  The e2e tests that repeat unit-covered behaviours (comma, whitespace, negative, not a number) are deleted; the only behaviour that was covered solely end to end (half-cent rounding) first gets a unit test on parse_price, then its e2e test goes; one or two e2e journeys remain (the total of several prices, possibly one error exit). The suite passes.
-context:
-  scaffold_script: place-files.sh
