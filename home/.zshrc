@@ -8,6 +8,9 @@ fi
 typeset -U path PATH
 path=("$HOME/.local/bin" "$HOME/.cargo/bin" $path)
 
+# CLI tools pinned in ~/.config/mise/config.toml (nvim, node, tmux, fzf, ...)
+command -v mise >/dev/null && eval "$(mise activate zsh)"
+
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
@@ -23,10 +26,6 @@ export EDITOR=nvim
 export VISUAL=nvim
 
 alias vim='nvim'
-
-export NVM_DIR="$HOME/.nvm"
-[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
-[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
 
 # Machine-specific settings (CUDA, work aliases, ...) live outside the repo
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
