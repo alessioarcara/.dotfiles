@@ -1,9 +1,9 @@
 # .dotfiles
 
-zsh (oh-my-zsh + powerlevel10k), tmux, Neovim, alacritty and lazygit
-configs, plus a tmux setup for coding agents (Claude Code, Codex).
+My terminal setup: zsh, tmux and Neovim, built around running coding agents
+(Claude Code, Codex) side by side, each in its own git worktree.
 
-![tmux: Neovim and a shell in window 1, three agents in their worktrees with state badges, plan usage in the status bar](docs/screenshot.png)
+![Neovim and a shell in the first window, three agents in the others with their state on the tab, plan usage in the status bar](docs/screenshot.png)
 
 ## Install
 
@@ -13,51 +13,88 @@ git clone git@github.com:alessioarcara/.dotfiles.git ~/.dotfiles
 chsh -s "$(which zsh)"
 ```
 
-`home/` mirrors `$HOME`. `install.sh` runs three steps, or just the one you
-name (`./install.sh links`); all are safe to re-run:
+> [!NOTE]
+> From the package manager it only needs `zsh git curl make gcc xclip unzip jq libnotify-bin`.
+> Everything else (Neovim, tmux, fzf, ...) is installed for your user, without sudo,
+> so it works the same on a server. Running it again is safe.
 
-- `links`: symlinks every file under `home/` to the same path in `$HOME`
-  (existing files are moved to `*.bak.<timestamp>`). The directories in `WHOLE`
-  (`.config/nvim`, `.claude/skills/testing`) are linked as a whole. A new file
-  under `home/` needs no other change: just re-run `links`.
-- `settings`: merges `fragments/claude-settings.json` (model, theme, plugins,
-  status line, worktree base, agent hooks) into `~/.claude/settings.json` and
-  `fragments/codex-hooks.json` into `~/.codex/hooks.json`. These files are not
-  linked because the tools rewrite them and they also hold machine state
-  (trust, auto mode). Fragment keys win, hooks are added only if missing,
-  everything else in the file is kept.
-- `tools`: installs [mise](https://mise.jdx.dev) and the CLI tools pinned in
-  `home/.config/mise/config.toml` (Neovim, tree-sitter, node, tmux, lazygit,
-  delta, ripgrep, fd, fzf, zoxide, ...) per user, without sudo; then
-  oh-my-zsh, powerlevel10k, tpm, and the Neovim plugins from `lazy-lock.json`.
-  `mise upgrade` takes the tools to the newest release matching their pins.
+## Agents in worktrees
 
-System packages it expects: `zsh git curl make gcc xclip unzip jq
-libnotify-bin`, plus `rustup` and `uv` if you want Rust/Python tooling.
+Press `prefix W` (the prefix is `Ctrl-a`) and type a name and a task:
 
-Machine-specific shell settings go in `~/.zshrc.local` (not versioned).
+```
+worktree: fix-loader fix the flaky test in test_loader.py
+worktree: codex fix-loader fix the flaky test in test_loader.py
+```
 
-## Agents in tmux
+A new window opens with the agent on the left (Claude, or Codex if you ask for
+it) and a shell inside the worktree on the right, for tests and `git diff`.
+The worktree gets the repo's `data` folder linked in and its own virtualenv.
 
-| What | Where (under `home/`) |
+<table>
+  <tr>
+    <td width="50%"><img src="docs/agent.png" alt="An agent window: Claude answering on the left, the worktree shell on the right"></td>
+    <td width="50%"><img src="docs/windows.png" alt="The window picker with a live preview of every window"></td>
+  </tr>
+  <tr>
+    <td align="center">An agent at work, with its worktree shell</td>
+    <td align="center"><code>prefix w</code>: every window at a glance</td>
+  </tr>
+</table>
+
+Each tab shows the agent's state, and a desktop notification tells you when it
+needs you:
+
+| ◐ | ● | ✓ | ✗ |
+| :---: | :---: | :---: | :---: |
+| working | waiting for you | done | error |
+
+The status bar shows how much of the Claude and Codex plans you have used.
+
+> [!TIP]
+> From a shell, `wt fix-loader <task>` does the same as `prefix W`, and
+> `wt -n 3 refactor <task>` gives the same task to three agents at once.
+
+> [!IMPORTANT]
+> When Claude exits (`/exit`) it asks whether to keep the worktree. Codex does
+> not, so remove its worktree with `wt --rm fix-loader`.
+
+## Keys
+
+| tmux (`Ctrl-a` …) | | Shell | |
+| --- | --- | --- | --- |
+| `W` | new agent in a worktree | `Ctrl-r` | search the history |
+| `w` | pick a window | `Ctrl-t` | find a file, with preview |
+| `\|` `-` | split side by side / stacked | `z <dir>` | jump to a frequent directory |
+| `H` `J` `K` `L` · `m` | resize · zoom the pane | `cat` | file with syntax colors |
+| `y` in copy mode | copy to the system clipboard | | |
+
+> [!NOTE]
+> On a server reached over ssh the tmux prefix becomes `Ctrl-b` and its status
+> bar moves to the top, so it can run inside the laptop's tmux.
+
+<details>
+<summary><b>Neovim keys</b> (leader is <code>Space</code>)</summary>
+
+| Keys | What it does |
 | --- | --- |
-| Window badge per agent: ◐ working, ● waiting for you, ✓ done (unseen), ✗ error, plus `notify-send` | `.tmux/agent-state.sh`, run by the Claude/Codex hooks |
-| Claude and Codex plan usage in the status bar | `.tmux/usage.sh claude\|codex`, fed by `.claude/statusline.sh` and `.codex/fetch-usage.py` |
-| `prefix W` or `wt [claude\|codex] <name> [prompt]`: an agent (default Claude) in a new worktree, in its own window with a shell on the side | `.local/bin/wt` |
-| `wt -n 3 [claude\|codex] <name> prompt`: same prompt to 3 agents, in background windows | `.local/bin/wt` |
-| `wt --rm <name>`: remove a worktree and its branch, refusing if that loses work (Claude asks on exit instead) | `.local/bin/wt` |
-| Worktree setup: symlink `data` (or the paths in `<repo>/.worktreelink`), `uv sync` | `.local/bin/wt-setup` |
+| `<leader>pf` · `Ctrl-p` · `<leader>ps` | find a file · a file in git · text in files |
+| `gd` · `K` · `[d` `]d` | go to definition · documentation · previous, next error |
+| `<leader>vca` · `<leader>vrn` · `<leader>f` | code action · rename · format |
+| `Alt-,` `Alt-.` · `Alt-1`…`Alt-5` · `Alt-c` | previous, next tab · go to tab · close tab |
+| `Ctrl-h j k l` | move between Neovim splits and tmux panes |
+| `<leader>gs` | git (fugitive) |
 
-## Neovim
+</details>
 
-Neovim ≥ 0.12, plugins managed by lazy.nvim. Leader is `<Space>`.
+<details>
+<summary><b>How the repo is organised</b></summary>
 
-| Keys | Action |
+| Path | What it is |
 | --- | --- |
-| `<leader>pf` / `<C-p>` / `<leader>ps` | find files / git files / grep |
-| `<leader>pv` | netrw |
-| `gd`, `K`, `[d` `]d` | definition, hover, prev/next diagnostic |
-| `<leader>vca` `<leader>vrn` `<leader>vrr` `<leader>vd` `<leader>f` | code action, rename, references, diagnostic float, format |
-| `<A-,>` `<A-.>` `<A-1..5>` `<A-c>` `<A-p>` | barbar: prev/next, go to, close, pick |
-| `<C-h/j/k/l>` | move between splits and tmux panes |
-| `<leader>gs` | fugitive |
+| `home/` | same layout as your home directory: every file is linked to the same place. Add a file there and run `./install.sh links` |
+| `fragments/` | the shareable part of the Claude Code and Codex settings, merged in by `./install.sh settings` (those tools rewrite their own files, so they are not linked) |
+| `home/.config/mise/config.toml` | the command-line tools and their versions; `mise upgrade` updates them |
+| `~/.zshrc.local` | settings for one machine only, not in the repo |
+
+</details>
