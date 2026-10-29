@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# A coding agent in a new git worktree, in its own tmux window:
+# the agent on the left, a shell in the worktree on the right (runs wt-setup first).
+#   wt [claude|codex] <name> [agent args...]    e.g. wt codex fix-loader "fix the flaky test"
+#   wt -n <count> [claude|codex] <name> [...]   same args to <count> agents, name-1..name-<count>
+#   wt --rm <name>                               remove a worktree and its branch, if nothing is lost
+# The agent defaults to claude. Unquoted words after the name are one prompt
+# (wt fix-loader fix the flaky test); flags go before it (wt fix-loader --model sonnet "prompt").
+# Worktrees live in <repo>/.claude/worktrees/<name>, on branch worktree-<name>.
+# Claude creates, resumes and cleans up its own (claude -w); for codex, wt
+# creates it from HEAD and `wt --rm` removes it.
+set -euo pipefail
+
+remove=false count=0 agent=claude
+case "${1:-}" in
+  --rm) remove=true; shift ;;
+  -n) count=$2; shift 2 ;;
+esac
+case "${1:-}" in claude | codex) agent=$1; shift ;; esac
+[ $# -ge 1 ] || { sed -n '2,11p' "$0" >&2; exit 2; }
+name=$1; shift
+if [ $# -gt 1 ] && [[ $1 != -* ]]; then set -- "$*"; fi
+
+# always start from the main checkout, so worktrees never nest
+common=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) ||
+  { echo "wt: not in a git repository: $PWD" >&2; exit 1; }
+main=$(dirname "$common")
+cd "$main"
+git rev-parse -q --verify HEAD >/dev/null ||
+  { echo "wt: $main has no commits yet, and a worktree starts from one" >&2; exit 1; }
+
+if $remove; then
+  git worktree remove "$main/.claude/worktrees/$name"  # refuses with uncommitted changes
+  git branch -d "worktree-$name"                       # refuses with unmerged commits
+  exit
+fi
+
+mkwt() {  # mkwt <name>: create the worktree claude -w would, or reuse it
+  local dir="$main/.claude/worktrees/$1" branch="worktree-$1"
+  [ -e "$dir/.git" ] && return
+  if git show-ref -q --verify "refs/heads/$branch"; then git worktree add -q "$dir" "$branch"
+  else git worktree add -q -b "$branch" "$dir" HEAD; fi
+}
+
+if [ -z "${TMUX:-}" ]; then
+  [ "$agent" = claude ] && exec claude -w "$name" "$@"
+  mkwt "$name" && cd "$main/.claude/worktrees/$name" && exec codex "$@"
+fi
+
+open() {  # open <worktree name> <new-window focus flag> [agent args...]
+  local wt=$1 focus=$2; shift 2
+  local dir="$main/.claude/worktrees/$wt" cwd=$main cmd win
+  if [ "$agent" = codex ]; then mkwt "$wt"; cwd=$dir; cmd=(codex "$@")
+  else cmd=(claude -w "$wt" "$@"); fi
+  # if the agent fails (untrusted repo, bad args...), keep its pane to show why
+  win=$(tmux new-window $focus -P -F '#{window_id}' -n "$wt" -c "$cwd" -- \
+    sh -c '"$@" || { s=$?; echo; echo "$1 exited with status $s, press enter"; read _; }' wt "${cmd[@]}")
+  tmux split-window -d -h -l 35% -t "$win" -c "$main" -- \
+    zsh -c 'wt-setup "$1" && cd "$1"; exec zsh' wt-shell "$dir"
+}
+
+if [ "$count" -gt 0 ]; then
+  for i in $(seq "$count"); do open "$name-$i" -d "$@"; done
+else
+  open "$name" "" "$@"
+fi

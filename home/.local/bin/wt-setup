@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Prepare a git worktree: symlink the main checkout's big untracked dirs
+# (datasets, ...) and build the worktree's own venv.
+#   wt-setup [worktree-dir]     default: current directory
+# Paths to link: one per line in <main checkout>/.worktreelink, default "data".
+# Small gitignored files (.env, ...) are Claude's job: list them in .worktreeinclude.
+# The venv is rebuilt, not linked: the main one imports the main checkout's code.
+set -euo pipefail
+
+dir=${1:-.}
+# Claude may still be creating the worktree: wait until its checkout is complete.
+# Check .git first, or git -C would find the main repo the worktree lives in.
+ready=false
+for _ in $(seq 300); do
+  [ -e "$dir/.git" ] && gd=$(git -C "$dir" rev-parse --absolute-git-dir 2>/dev/null) &&
+    [ -f "$gd/index" ] && [ ! -e "$gd/index.lock" ] && { ready=true; break; }
+  sleep 0.2
+done
+$ready || { echo "wt-setup: no worktree at $dir after 60s (did claude -w fail?)" >&2; exit 1; }
+cd "$dir"
+
+wt=$(git rev-parse --show-toplevel)
+common=$(git rev-parse --path-format=absolute --git-common-dir)
+main=$(dirname "$common")
+[ "$wt" != "$main" ] || { echo "wt-setup: $wt is the main checkout, not a worktree" >&2; exit 1; }
+
+links=data
+[ -f "$main/.worktreelink" ] && links=$(grep -Ev '^[[:space:]]*(#|$)' "$main/.worktreelink")
+
+for p in $links; do
+  [ -e "$main/$p" ] && [ ! -e "$wt/$p" ] || continue
+  mkdir -p "$(dirname "$wt/$p")"
+  ln -s "$main/$p" "$wt/$p"
+  # a "/data/" pattern matches directories only, not a symlink named data
+  if ! git check-ignore -q "$p"; then
+    mkdir -p "$common/info"
+    echo "/$p" >> "$common/info/exclude"
+  fi
+  echo "linked $p -> $main/$p"
+done
+
+if [ -f uv.lock ] && [ ! -d .venv ]; then
+  echo "uv sync ..."
+  uv sync
+fi
