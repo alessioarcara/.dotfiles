@@ -12,7 +12,8 @@ return {
     dependencies = "nvim-tree/nvim-web-devicons",
     lazy = false,
     init = function() vim.g.barbar_auto_setup = false end,
-    opts = {},
+    -- shift the tabs right of the nvim-tree sidebar
+    opts = { sidebar_filetypes = { NvimTree = true } },
     keys = {
       { "<A-,>", "<Cmd>BufferPrevious<CR>" },
       { "<A-.>", "<Cmd>BufferNext<CR>" },
